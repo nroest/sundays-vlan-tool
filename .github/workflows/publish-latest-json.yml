@@ -1,0 +1,32 @@
+name: Publish latest.json
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Build latest.json
+        id: build
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          URL="https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/SundaysVLANTool.exe"
+          NOTES="${{ github.event.release.body }}"
+          printf '{\n  "version": "%s",\n  "url": "%s",\n  "notes": %s\n}\n' \
+            "$TAG" "$URL" "$(python - <<'PY'\nimport json,os\nprint(json.dumps(os.environ.get('NOTES','')))\nPY")" \
+            > latest.json
+
+      - name: Publish to gh-pages
+        run: |
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add latest.json
+          git commit -m "Update latest.json for ${{ github.event.release.tag_name }}"
+          git branch -M gh-pages
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git push -f origin gh-pages
