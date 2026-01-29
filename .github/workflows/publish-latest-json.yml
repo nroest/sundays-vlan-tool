@@ -39,7 +39,7 @@ jobs:
 
           tag = data.get("tag_name", "")
           notes = data.get("body", "")
-          url = f"https://github.com/{repo}/releases/download/{tag}/SundaysVLANTool.exe"
+          url = f"https://github.com/{repo}/releases/tag/{tag}"
 
           payload = {
               "version": tag,
