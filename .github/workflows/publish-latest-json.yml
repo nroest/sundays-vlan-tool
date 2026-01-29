@@ -14,12 +14,44 @@ jobs:
       - name: Build latest.json
         id: build
         run: |
-          TAG="${{ github.event.release.tag_name }}"
-          URL="https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/SundaysVLANTool.exe"
-          NOTES="${{ github.event.release.body }}"
-          printf '{\n  "version": "%s",\n  "url": "%s",\n  "notes": %s\n}\n' \
-            "$TAG" "$URL" "$(python - <<'PY'\nimport json,os\nprint(json.dumps(os.environ.get('NOTES','')))\nPY")" \
-            > latest.json
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          release = os.environ.get("GITHUB_EVENT_RELEASE", "").strip()
+          data = None
+
+          if release:
+              try:
+                  data = json.loads(release)
+              except json.JSONDecodeError:
+                  data = None
+
+          if not data:
+              req = urllib.request.Request(
+                  f"https://api.github.com/repos/{repo}/releases/latest",
+                  headers={"User-Agent": "SundaysVLANTool"}
+              )
+              with urllib.request.urlopen(req) as resp:
+                  data = json.load(resp)
+
+          tag = data.get("tag_name", "")
+          notes = data.get("body", "")
+          url = f"https://github.com/{repo}/releases/download/{tag}/SundaysVLANTool.exe"
+
+          payload = {
+              "version": tag,
+              "url": url,
+              "notes": notes or ""
+          }
+          with open("latest.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, indent=2)
+              f.write("\n")
+          PY
+        env:
+          GITHUB_EVENT_RELEASE: ${{ toJson(github.event.release) }}
 
       - name: Publish to gh-pages
         run: |
