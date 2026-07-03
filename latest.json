@@ -1,0 +1,5 @@
+{
+  "version": "v0.9.0",
+  "url": "https://github.com/nroest/sundays-vlan-tool/releases/tag/v0.9.0",
+  "notes": "Switch Embedded Teaming integration\n\nExisting SET switches now show up in the tool, including the team adapters, load balancing mode, and which physical NICs are already tied up.\n\nAdded an SET-specific uplink editor, so normal single-NIC vSwitches still use the normal rebind flow, and SET switches get their own cleaner update flow.\n\nAdded safety checks before creating or updating a SET switch, so you can't be a silly billy and pick adapters that are already being used by another external switch or team.\n\nThe live refresh stuff should also not stomp on your SET selections while you are halfway through editing them, also no promises but it seems ok and I did some rogue circumstances to test."
+}
